@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HPV Komunikacija — Edukativna igra</title>
+<style>
+  :root{
+    --bg:#0f172a;
+    --bg2:#1e293b;
+    --panel:#1e293b;
+    --panel2:#273449;
+    --accent:#14b8a6;
+    --accent2:#0ea5e9;
+    --gold:#fbbf24;
+    --text:#e2e8f0;
+    --muted:#94a3b8;
+    --good:#22c55e;
+    --mid:#eab308;
+    --bad:#ef4444;
+    --shadow:0 10px 40px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    background:radial-gradient(1200px 800px at 70% -10%,#1d3a5f 0%,var(--bg) 55%);
+    color:var(--text);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .screen{display:none;min-height:100vh;padding:clamp(14px,3vw,32px);}
+  .screen.active{display:block;}
+  h1,h2,h3{margin:0;font-weight:700;}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:12px;font-weight:600;transition:transform .08s ease, box-shadow .2s, background .2s, opacity .2s;}
+  button:active{transform:translateY(1px) scale(.99);}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04201d;padding:14px 26px;font-size:18px;box-shadow:0 8px 24px rgba(20,184,166,.35);}
+  .btn-primary:hover{box-shadow:0 10px 30px rgba(20,184,166,.55);}
+  .btn-ghost{background:rgba(255,255,255,.06);color:var(--text);padding:12px 20px;font-size:15px;border:1px solid rgba(255,255,255,.12);}
+  .btn-ghost:hover{background:rgba(255,255,255,.12);}
+
+  /* ---------- SETUP ---------- */
+  .setup-wrap{max-width:720px;margin:0 auto;padding-top:4vh;}
+  .brand{display:flex;align-items:center;gap:16px;margin-bottom:6px;}
+  .brand .logo{font-size:46px;}
+  .brand h1{font-size:clamp(24px,4vw,36px);letter-spacing:.3px;}
+  .subtitle{color:var(--muted);font-size:16px;margin:4px 0 28px 62px;}
+  .card{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;box-shadow:var(--shadow);}
+  .field{margin-bottom:20px;}
+  .field label{display:block;font-size:14px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px;}
+  select,input[type=text]{
+    width:100%;padding:13px 15px;border-radius:11px;border:1px solid rgba(255,255,255,.14);
+    background:var(--panel2);color:var(--text);font-size:17px;outline:none;
+  }
+  select:focus,input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(20,184,166,.2);}
+  .team-inputs{display:grid;gap:12px;}
+  .team-row{display:flex;align-items:center;gap:12px;}
+  .team-chip{flex:0 0 40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#04201d;}
+  .setup-actions{margin-top:26px;display:flex;justify-content:flex-end;gap:12px;}
+  .hint{font-size:13px;color:var(--muted);margin-top:18px;line-height:1.5;}
+
+  /* ---------- BOARD ---------- */
+  .board-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:22px;flex-wrap:wrap;}
+  .board-title{display:flex;align-items:center;gap:12px;}
+  .board-title .logo{font-size:30px;}
+  .board-title h2{font-size:clamp(17px,2.4vw,24px);}
+  .leaderboard{display:flex;gap:12px;flex-wrap:wrap;}
+  .lb-team{
+    background:var(--panel);border:2px solid transparent;border-radius:14px;padding:10px 16px;min-width:150px;
+    display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);position:relative;
+  }
+  .lb-team.active{border-color:var(--gold);box-shadow:0 0 0 3px rgba(251,191,36,.25),var(--shadow);}
+  .lb-dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#04201d;flex:0 0 34px;}
+  .lb-info{display:flex;flex-direction:column;line-height:1.15;}
+  .lb-name{font-size:15px;font-weight:700;}
+  .lb-score{font-size:13px;color:var(--muted);}
+  .lb-score b{color:var(--gold);font-size:18px;}
+  .turn-flag{position:absolute;top:-10px;right:10px;background:var(--gold);color:#3b2c00;font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;text-transform:uppercase;letter-spacing:.5px;}
+
+  .turn-banner{
+    text-align:center;margin:6px 0 22px;font-size:18px;color:var(--muted);
+  }
+  .turn-banner b{color:var(--gold);font-size:22px;}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(clamp(84px,12vw,140px),1fr));gap:clamp(8px,1.4vw,18px);max-width:1200px;margin:0 auto;
+  }
+  .avatar{
+    aspect-ratio:1/1;border-radius:18px;background:linear-gradient(145deg,var(--panel2),var(--panel));
+    border:1px solid rgba(255,255,255,.1);display:grid;place-items:center;position:relative;
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .avatar .face{font-size:clamp(30px,5vw,46px);line-height:1;}
+  .avatar .num{position:absolute;top:8px;left:11px;font-size:13px;color:var(--muted);font-weight:700;}
+  .avatar:not(.done):hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(0,0,0,.5);border-color:var(--accent);}
+  .avatar.done{cursor:default;opacity:.32;filter:grayscale(.7);}
+  .avatar.done::after{content:"✓";position:absolute;font-size:54px;color:var(--good);font-weight:800;text-shadow:0 2px 8px rgba(0,0,0,.5);}
+  .avatar.done .face{opacity:.4;}
+  .avatar .badge{position:absolute;bottom:8px;right:10px;background:var(--accent);color:#04201d;font-weight:800;font-size:13px;padding:2px 9px;border-radius:9px;}
+
+  .board-foot{text-align:center;margin-top:26px;}
+
+  /* ---------- MODAL ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(5,10,20,.82);backdrop-filter:blur(4px);
+    display:none;place-items:center;padding:24px;z-index:50;
+  }
+  .overlay.active{display:grid;}
+  .modal{
+    width:min(900px,100%);max-height:92vh;overflow:auto;background:var(--panel);
+    border:1px solid rgba(255,255,255,.1);border-radius:22px;box-shadow:var(--shadow);
+    animation:pop .22s ease;
+  }
+  @keyframes pop{from{transform:scale(.94);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 26px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:var(--panel);}
+  .modal-head .who{display:flex;align-items:center;gap:12px;}
+  .modal-head .who .dot{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#04201d;}
+  .modal-head .who h3{font-size:18px;}
+  .modal-head .who span{font-size:13px;color:var(--muted);}
+  .timer{
+    font-variant-numeric:tabular-nums;font-size:clamp(24px,3.4vw,32px);font-weight:800;padding:6px 16px;border-radius:12px;
+    background:var(--panel2);min-width:96px;text-align:center;letter-spacing:1px;
+  }
+  .timer.warn{color:var(--mid);}
+  .timer.crit{color:var(--bad);animation:pulse .8s infinite;}
+  @keyframes pulse{50%{opacity:.5;}}
+  .modal-body{padding:26px;}
+  .scenario-label{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:12px;font-weight:700;}
+  .quote{
+    font-size:clamp(18px,2.6vw,26px);line-height:1.5;background:var(--panel2);border-left:5px solid var(--accent);
+    padding:clamp(16px,2.5vw,26px);border-radius:14px;margin-bottom:22px;font-style:italic;
+  }
+  .quote::before{content:"“";color:var(--accent);font-size:30px;font-weight:800;}
+  .quote::after{content:"”";color:var(--accent);font-size:30px;font-weight:800;}
+  .timer-controls{display:flex;gap:10px;justify-content:center;margin-bottom:20px;}
+
+  .help-toggle{width:100%;text-align:left;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.2);
+    color:var(--muted);padding:12px 16px;border-radius:12px;font-size:14px;display:flex;justify-content:space-between;align-items:center;}
+  .help-toggle:hover{background:rgba(255,255,255,.08);}
+  .help-box{display:none;margin-top:12px;background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.25);border-radius:12px;padding:16px 20px;font-size:15px;line-height:1.6;}
+  .help-box.show{display:block;}
+  .help-box .row{margin-bottom:8px;}
+  .help-box .tag{color:var(--accent2);font-weight:700;}
+
+  .scoring{margin-top:26px;border-top:1px solid rgba(255,255,255,.08);padding-top:22px;}
+  .scoring h4{margin:0 0 14px;font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;text-align:center;}
+  .score-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .score-btn{padding:18px 14px;border-radius:16px;color:#fff;text-align:center;border:2px solid transparent;}
+  .score-btn .pts{font-size:30px;font-weight:800;display:block;}
+  .score-btn .desc{font-size:13px;opacity:.95;margin-top:6px;display:block;line-height:1.35;}
+  .score-btn.s0{background:linear-gradient(135deg,#7f1d1d,#ef4444);}
+  .score-btn.s1{background:linear-gradient(135deg,#854d0e,#eab308);}
+  .score-btn.s2{background:linear-gradient(135deg,#14532d,#22c55e);}
+  .score-btn:hover{box-shadow:0 10px 26px rgba(0,0,0,.5);transform:translateY(-3px);}
+
+  /* ---------- END ---------- */
+  .end-wrap{max-width:640px;margin:0 auto;padding-top:6vh;text-align:center;}
+  .trophy{font-size:84px;margin-bottom:10px;animation:float 2.4s ease-in-out infinite;}
+  @keyframes float{50%{transform:translateY(-12px);}}
+  .winner-name{font-size:clamp(28px,6vw,44px);font-weight:800;color:var(--gold);margin:6px 0 4px;}
+  .winner-sub{color:var(--muted);font-size:17px;margin-bottom:30px;}
+  .final-list{display:flex;flex-direction:column;gap:12px;margin-bottom:32px;}
+  .final-row{display:flex;align-items:center;gap:16px;background:var(--panel);border-radius:14px;padding:14px 20px;box-shadow:var(--shadow);}
+  .final-row.first{border:2px solid var(--gold);}
+  .rank{font-size:22px;font-weight:800;width:40px;text-align:center;}
+  .final-row .nm{flex:1;text-align:left;font-size:19px;font-weight:700;}
+  .final-row .pts{font-size:24px;font-weight:800;color:var(--gold);}
+  .end-actions{display:flex;gap:12px;justify-content:center;}
+
+  /* Tablet / narrow */
+  @media (max-width:760px){
+    .board-head{flex-direction:column;align-items:stretch;}
+    .leaderboard{justify-content:center;}
+    .lb-team{min-width:0;flex:1 1 130px;}
+    .modal-head{flex-wrap:wrap;gap:10px;}
+  }
+  /* Phone */
+  @media (max-width:560px){
+    .score-btns{grid-template-columns:1fr;}
+    .timer-controls{flex-direction:column;}
+    .timer-controls .btn-ghost{width:100%;}
+    .lb-info .lb-name{font-size:13px;}
+    .setup-actions{justify-content:stretch;}
+    .setup-actions .btn-primary{width:100%;}
+  }
+  /* Large display / projector */
+  @media (min-width:1500px){
+    .grid{max-width:1500px;gap:22px;}
+    .turn-banner b{font-size:26px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ FAZA 1: SETUP ============ -->
+<section id="screen-setup" class="screen active">
+  <div class="setup-wrap">
+    <div class="brand">
+      <span class="logo">🩺</span>
+      <h1>Komunikacija o HPV vakcini</h1>
+    </div>
+    <p class="subtitle">Edukativna igra za radionice sa lekarima · JitsuVax / HBM metodologija</p>
+
+    <div class="card">
+      <div class="field">
+        <label for="teamCount">Broj timova</label>
+        <select id="teamCount"></select>
+      </div>
+      <div class="field">
+        <label>Imena timova</label>
+        <div id="teamInputs" class="team-inputs"></div>
+      </div>
+      <div class="field">
+        <label for="timerDuration">Vreme za odgovor tima</label>
+        <select id="timerDuration"></select>
+      </div>
+      <div class="setup-actions">
+        <button class="btn-primary" id="startBtn">Započni igru ▶</button>
+      </div>
+      <p class="hint">
+        Igra se prikazuje na velikom ekranu. Facilitator proziva tim na potezu, tim bira avatar,
+        a facilitator otvara izjavu roditelja klikom. Tim formuliše odgovor uživo (u okviru podešenog vremena),
+        nakon čega facilitator dodeljuje 0, 1 ili 2 poena.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAZA 2/3: TABLA ============ -->
+<section id="screen-board" class="screen">
+  <div class="board-head">
+    <div class="board-title">
+      <span class="logo">🩺</span>
+      <h2>HPV — komunikacija sa roditeljima</h2>
+    </div>
+    <div class="leaderboard" id="leaderboard"></div>
+  </div>
+
+  <div class="turn-banner">Na potezu: <b id="turnName">—</b></div>
+
+  <div class="grid" id="avatarGrid"></div>
+
+  <div class="board-foot">
+    <button class="btn-ghost" id="endEarlyBtn">Završi igru i prikaži rezultate</button>
+  </div>
+</section>
+
+<!-- ============ FAZA 4: MODAL ============ -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="who">
+        <span class="dot" id="modalDot">1</span>
+        <div>
+          <h3 id="modalTeam">Tim</h3>
+          <span id="modalScenarioNo">Scenario</span>
+        </div>
+      </div>
+      <div class="timer" id="timer">1:00</div>
+    </div>
+    <div class="modal-body">
+      <div class="scenario-label" id="modalTitle">Izjava roditelja</div>
+      <div class="quote" id="modalQuote"></div>
+
+      <div class="timer-controls">
+        <button class="btn-ghost" id="timerStart">▶ Pokreni 60 s</button>
+        <button class="btn-ghost" id="timerReset">↺ Resetuj</button>
+      </div>
+
+      <button class="help-toggle" id="helpToggle">
+        <span>💡 Pomoć za facilitatora (HBM drajver i JitsuVax koren)</span>
+        <span id="helpChevron">▼</span>
+      </button>
+      <div class="help-box" id="helpBox">
+        <div class="row"><span class="tag">HBM drajver:</span> <span id="helpHbm"></span></div>
+        <div class="row"><span class="tag">JitsuVax koren:</span> <span id="helpJv"></span></div>
+      </div>
+
+      <div class="scoring">
+        <h4>Dodeli poene timu</h4>
+        <div class="score-btns">
+          <button class="score-btn s0" data-pts="0">
+            <span class="pts">0</span>
+            <span class="desc">Napadački, pretežak žargon ili izazvan konflikt</span>
+          </button>
+          <button class="score-btn s1" data-pts="1">
+            <span class="pts">1</span>
+            <span class="desc">Tačno, ali bez empatije / validacije zabrinutosti</span>
+          </button>
+          <button class="score-btn s2" data-pts="2">
+            <span class="pts">2</span>
+            <span class="desc">Empatija + jasna, kratka i tačna informacija</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FAZA 5: KRAJ ============ -->
+<section id="screen-end" class="screen">
+  <div class="end-wrap">
+    <div class="trophy">🏆</div>
+    <div class="winner-name" id="winnerName">—</div>
+    <div class="winner-sub" id="winnerSub"></div>
+    <div class="final-list" id="finalList"></div>
+    <div class="end-actions">
+      <button class="btn-primary" id="newGameBtn">Nova igra</button>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ============================================================
+   BAZA SCENARIJA (17 izjava roditelja + pomoć za facilitatora)
+   ============================================================ */
+const SCENARIOS = [
+  {t:"Tajming i odlaganje",
+   q:"Doktore, zar nije rano da moje dete sada primi vakcinu? Još uvek je mala i ne razmišlja o tim stvarima. Zašto da žurimo? Zar nije logičnije da joj damo tu vakcinu kada se približi vreme, kad to postane kritično?",
+   hbm:"Percepcija osetljivosti — roditelj misli da dete trenutno nije ugroženo niti osetljivo na infekciju.",
+   jv:"Distorted risk perception (Iskrivljena percepcija rizika) — nerazumevanje koncepta profilakse i tajminga imunološkog odgovora pre izlaganja."},
+  {t:"Kondom kao zamena",
+   q:"Slušala sam neke doktore i zar nije jedina zaštita od HPV-a korišćenje kondoma tokom seksualnih odnosa? Ne vidim razlog zašto bismo dete izlagali vakcini, kad je kondom osnovna i sasvim dovoljna zaštita.",
+   hbm:"Percepcija koristi — roditelj ne vidi dodatnu korist vakcine naspram mehaničke zaštite.",
+   jv:"Unwarranted beliefs (Neosnovana uverenja) — lažna ekvivalencija zaštite kondomom i potpunog imuniteta."},
+  {t:"Vakcinacija dečaka",
+   q:"Zašto mi preporučujete ovu vakcinu za sina? Mislila sam da HPV izaziva samo rak grlića materice i da je ovo vakcina isključivo namenjena devojčicama. Koja je svrha da je on primi?",
+   hbm:"Percepcija osetljivosti — roditelj veruje da dečaci nisu osetljivi na bolest.",
+   jv:"Distorted risk perception (Iskrivljena percepcija rizika) — nedostatak informacija o širini patologije koju virus izaziva kod oba pola."},
+  {t:"Sumnja u efikasnost (broj tipova)",
+   q:"Čula sam na televiziji da postoji preko 1000 tipova HPV-a. Ako ih ima toliko mnogo, koja je onda uopšte poenta ove vakcine? Zar nije besmisleno štititi se od samo nekoliko tipova kada je virus toliko rasprostranjen?",
+   hbm:"Percepcija koristi — sumnja da delimično pokriće tipova donosi ikakvu stvarnu korist.",
+   jv:"Epistemic relativism (Epistemički relativizam) — oslanjanje na površne informacije iz medija umesto na razumevanje koji tačno genotipovi izazivaju karcinom."},
+  {t:"Brzina razvoja bolesti",
+   q:"Negde sam pročitala da je 6 do 12 meseci sasvim dovoljno da dođe do promena na grliću materice. Ako se to tako brzo razvija, zar nije onda bolje i sigurnije da ona ide na redovne preglede kod ginekologa, umesto da prima vakcinu?",
+   hbm:"Percepcija koristi i ozbiljnosti — sekundarna prevencija se doživljava kao dovoljna, umanjujući ozbiljnost patologije.",
+   jv:"Unwarranted beliefs (Neosnovana uverenja) — nerazumevanje razlike između primarne prevencije i lečenja posledica."},
+  {t:"Trajanje imuniteta",
+   q:"Znam neke žene koje su primile vakcinu pre 7-8 godina i vidim da to nije baš tako pouzdano kako se priča. Ako moja ćerka primi vakcinu sada sa 11 godina, da li će to uopšte delovati kada bude imala 28 ili 38 godina? Da li će morati stalno da prima nove doze?",
+   hbm:"Percepcija koristi — sumnja u dugoročnu isplativost i trajanje zaštite.",
+   jv:"Epistemic relativism (Epistemički relativizam) — stavljanje anegdotskih iskustava ispred kliničkih studija."},
+  {t:"Spontano čišćenje virusa",
+   q:"Čitala sam da najveći broj zaraženih osoba zapravo nikada ni ne dobije simptome i da čak 9 od 10 infekcija prođe spontano, samo od sebe, u periodu od dve godine. Zašto onda da izlažem dete vakcini, ako organizam to očigledno može sam da reši?",
+   hbm:"Percepcija ozbiljnosti — ako većina preleži bez posledica, sama infekcija nije ozbiljna pretnja.",
+   jv:"Distorted risk perception (Iskrivljena percepcija rizika) — previđanje onog malog, ali fatalnog procenta kod koga se razvije karcinom."},
+  {t:"Hirurško lečenje kao alternativa",
+   q:"Neki ginekolozi kažu da se kondilomi, pa čak i teže promene poput CIN 2 i 3, lako uklanjaju intervencijom. Ako to može tako rutinski da se reši i skine, da li je zaista neophodno da prima vakcinu?",
+   hbm:"Percepcija ozbiljnosti — hirurgija je „laka”, pa bolest nije ozbiljna.",
+   jv:"Distorted risk perception (Iskrivljena percepcija rizika) — drastično potcenjivanje stresa, bola i rizika operativnih zahvata na grliću materice."},
+  {t:"Strah od neželjenih efekata",
+   q:"Iskreno, jako se plašim neželjenih reakcija i njene dugoročne bezbednosti. Koliko je ova vakcina uopšte dugo na tržištu i ko je proizvodi? Nemam dovoljno informacija o tome kakva su iskustva u drugim zemljama da bih bila mirna.",
+   hbm:"Percepcija prepreka — strah od nepoznatog i nuspojava deluje kao ogromna barijera za prihvatanje.",
+   jv:"Fear and phobias (Strahovi i fobije) — anksioznost usled nedostatka informacija o sigurnosnom profilu."},
+  {t:"Stigma — „neće se desiti mom detetu”",
+   q:"Ja vrlo dobro poznajem i vaspitavam svoje dete. Sigurna sam da ona neće doći u situaciju da dobije seksualno prenosivu bolest. Mislim da vakcina za ovu vrstu bolesti nama jednostavno nije potrebna.",
+   hbm:"Percepcija osetljivosti — potpuno negiranje rizika jer se dete doživljava kao „sigurno”.",
+   jv:"Moral concerns (Moralne brige) — povezivanje infekcije sa „lošim vaspitanjem” ili promiskuitetom, želja za očuvanjem čistote deteta."},
+  {t:"Fertilitet",
+   q:"Svašta se priča o ovoj vakcini i najviše me brine kako će ona uticati na njeno zdravlje kasnije u životu. Mene zanima da li ova vakcina može da izazove probleme sa fertilitetom i da li će ona moći da ima decu bez problema ako je sada primi?",
+   hbm:"Percepcija prepreka — strah od ugrožavanja reproduktivnog zdravlja stvara snažan otpor.",
+   jv:"Fear and phobias / Unwarranted beliefs — strahovi potpomognuti specifičnim, čestim dezinformacijama i teorijama o sterilizaciji."},
+  {t:"Sastav vakcine",
+   q:"Zabrinuta sam šta se sve tačno nalazi u toj vakcini. Stalno čitamo o raznim dodacima i aluminijumu u vakcinama. Da li je zaista bezbedno da se takav sastav ubrizgava mom detetu koje je još uvek u razvoju?",
+   hbm:"Percepcija prepreka — briga o unosu nepoznatih ili „toksičnih” supstanci.",
+   jv:"Fear and phobias — strah od hemije/toksina („Toxophobia”)."},
+  {t:"Nepoverenje u statistiku",
+   q:"Iskreno, apsolutno mi zvuči netačno da smo mi baš u vrhu po statistici za rak grlića materice. Pričala sam sa nekim ljudima, pa i lekarima, koji kažu da se to preuveličava i da oni veruju samo u svoje lično iskustvo. Zašto bih ja sada slepo verovala tim brojkama?",
+   hbm:"Percepcija ozbiljnosti — negiranje nacionalnog zdravstvenog problema na nivou cele populacije.",
+   jv:"Epistemic relativism (Epistemički relativizam) — selektivno odbacivanje zvaničnih statističkih podataka u korist pristrasnog ličnog iskustva."},
+  {t:"Nedovoljna svest o drugim kancerima",
+   q:"Shvatam da ova vakcina štiti od raka grlića materice, ali stalno potencirate da treba i dečaci da je prime. Koji to tačno rak dečaci uopšte mogu da dobiju od HPV-a? Nikad nisam čula da muškarci imaju ozbiljne posledice, osim eventualno nekih bradavica.",
+   hbm:"Percepcija ozbiljnosti i osetljivosti — verovanje da muški pol ne snosi teške posledice.",
+   jv:"Distorted risk perception (Iskrivljena percepcija rizika) — manjak informisanosti o karcinomima usne duplje, anusa, penisa itd."},
+  {t:"Uticaj na pubertet",
+   q:"Ona je sada u najosetljivijem periodu, tek ulazi u pubertet i hormoni joj se jako menjaju. Plašim se da bi ova vakcina mogla nekako da poremeti njen prirodni razvoj. Da li je zaista pametno davati joj ovako nešto baš sada kada joj se telo toliko menja?",
+   hbm:"Percepcija prepreka — strah od ometanja fiziološkog razvoja.",
+   jv:"Unwarranted beliefs (Neosnovana uverenja) — povezivanje imunološkog odgovora sa endokrinim/hormonalnim promenama."},
+  {t:"Iskustvo iz inostranstva vs. mi",
+   q:"Zanima me koliko je ova vakcina zapravo testirana kod nas? Znam da pričate da to daju u inostranstvu, ali ko nam garantuje da je to dobro i za našu decu? Koliko je uopšte dugo ova vakcina na tržištu?",
+   hbm:"Percepcija prepreka — nepoverenje u lokalni zdravstveni sistem stvara barijeru.",
+   jv:"Epistemic relativism (Epistemički relativizam) uz blagi prizvuk sumnje u motive institucija."},
+  {t:"Normalizacija virusa",
+   q:"Čitala sam da preko 80% ljudi ionako pre ili kasnije dođe u kontakt sa ovim virusom i da većina nosi HPV. Ako je to toliko uobičajeno i normalno, zašto pravimo toliku paniku i moramo decu da vakcinišemo? Zar se ne stiče neki prirodni imunitet?",
+   hbm:"Percepcija ozbiljnosti — smatranje da „sveprisutnost” virusa znači da je bezopasan.",
+   jv:"Distorted risk perception (Iskrivljena percepcija rizika) i privlačnost ideje o prirodnom imunitetu „krda”."}
+];
+
+const FACES = ["😀","😟","🤔","😠","😕","😬","🙂","😧","😨","😐","😲","😮","🧐","😤","😦","🤨","😯"];
+const TEAM_COLORS = ["#14b8a6","#f59e0b","#8b5cf6","#ec4899","#3b82f6"];
+
+/* ---------- STATE ---------- */
+let state = {
+  teams:[],
+  current:0,
+  order:[],          // shuffled scenario index per avatar
+  done:[],           // bool per avatar
+  activeAvatar:null,
+  timer:{id:null,left:60,duration:60}
+};
+
+/* ---------- HELPERS ---------- */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+function show(id){$$(".screen").forEach(s=>s.classList.remove("active"));$("#"+id).classList.add("active");}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ---------- SETUP ---------- */
+function initSetup(){
+  const sel=$("#teamCount");
+  for(let n=2;n<=5;n++){
+    const o=document.createElement("option");o.value=n;o.textContent=n;sel.appendChild(o);
+  }
+  sel.value=3;
+  renderTeamInputs(3);
+  sel.addEventListener("change",e=>renderTeamInputs(+e.target.value));
+
+  const td=$("#timerDuration");
+  [30,45,60,90,120].forEach(s=>{
+    const o=document.createElement("option");o.value=s;o.textContent=s+" sekundi";td.appendChild(o);
+  });
+  td.value=60;
+  $("#startBtn").addEventListener("click",startGame);
+}
+function renderTeamInputs(n){
+  const wrap=$("#teamInputs");
+  const existing=[...$$("#teamInputs input")].map(i=>i.value);
+  wrap.innerHTML="";
+  for(let i=0;i<n;i++){
+    const row=document.createElement("div");row.className="team-row";
+    const chip=document.createElement("div");chip.className="team-chip";
+    chip.style.background=TEAM_COLORS[i];chip.textContent=i+1;
+    const inp=document.createElement("input");inp.type="text";inp.maxLength=28;
+    inp.placeholder="Naziv tima "+(i+1);
+    inp.value=existing[i]||"";
+    row.appendChild(chip);row.appendChild(inp);wrap.appendChild(row);
+  }
+}
+
+/* ---------- START GAME ---------- */
+function startGame(){
+  const inputs=[...$$("#teamInputs input")];
+  state.teams=inputs.map((inp,i)=>({
+    name:inp.value.trim()||("Tim "+(i+1)),
+    score:0,color:TEAM_COLORS[i],idx:i+1
+  }));
+  state.current=0;
+  state.timer.duration=+$("#timerDuration").value||60;
+  state.order=shuffle([...Array(SCENARIOS.length).keys()]); // randomize mapping
+  state.done=new Array(SCENARIOS.length).fill(false);
+  renderBoard();
+  show("screen-board");
+}
+
+/* ---------- BOARD ---------- */
+function renderBoard(){
+  renderLeaderboard();
+  $("#turnName").textContent=state.teams[state.current].name;
+  const grid=$("#avatarGrid");
+  grid.innerHTML="";
+  for(let i=0;i<SCENARIOS.length;i++){
+    const a=document.createElement("div");
+    a.className="avatar"+(state.done[i]?" done":"");
+    a.innerHTML=`<span class="num">${i+1}</span><span class="face">${FACES[i]}</span>`;
+    if(!state.done[i]) a.addEventListener("click",()=>openScenario(i));
+    grid.appendChild(a);
+  }
+}
+function renderLeaderboard(){
+  const lb=$("#leaderboard");lb.innerHTML="";
+  state.teams.forEach((t,i)=>{
+    const el=document.createElement("div");
+    el.className="lb-team"+(i===state.current?" active":"");
+    el.innerHTML=`
+      ${i===state.current?'<span class="turn-flag">na potezu</span>':''}
+      <div class="lb-dot" style="background:${t.color}">${t.idx}</div>
+      <div class="lb-info">
+        <span class="lb-name">${escapeHtml(t.name)}</span>
+        <span class="lb-score"><b>${t.score}</b> poena</span>
+      </div>`;
+    lb.appendChild(el);
+  });
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ---------- MODAL / SCENARIO ---------- */
+function openScenario(avatarIndex){
+  if(state.done[avatarIndex])return;
+  state.activeAvatar=avatarIndex;
+  const sc=SCENARIOS[state.order[avatarIndex]];
+  const team=state.teams[state.current];
+
+  $("#modalDot").textContent=team.idx;
+  $("#modalDot").style.background=team.color;
+  $("#modalTeam").textContent=team.name;
+  $("#modalScenarioNo").textContent="Avatar "+(avatarIndex+1)+" · "+sc.t;
+  $("#modalQuote").textContent=sc.q;
+  $("#helpHbm").textContent=sc.hbm;
+  $("#helpJv").textContent=sc.jv;
+
+  // reset help + timer
+  $("#helpBox").classList.remove("show");
+  $("#helpChevron").textContent="▼";
+  resetTimer();
+  $("#overlay").classList.add("active");
+}
+function closeModal(){
+  stopTimer();
+  $("#overlay").classList.remove("active");
+  state.activeAvatar=null;
+}
+
+/* ---------- TIMER ---------- */
+function fmt(s){const m=Math.floor(s/60);return m+":"+String(s%60).padStart(2,"0");}
+function paintTimer(){
+  const el=$("#timer");el.textContent=fmt(state.timer.left);
+  const crit=Math.max(5,Math.round(state.timer.duration*0.17));
+  const warn=Math.max(10,Math.round(state.timer.duration*0.34));
+  el.classList.toggle("warn",state.timer.left<=warn&&state.timer.left>crit);
+  el.classList.toggle("crit",state.timer.left<=crit);
+}
+function startTimer(){
+  if(state.timer.id)return;
+  $("#timerStart").textContent="⏸ Pauza";
+  state.timer.id=setInterval(()=>{
+    state.timer.left--;
+    paintTimer();
+    if(state.timer.left<=0){stopTimer();}
+  },1000);
+}
+function stopTimer(){
+  if(state.timer.id){clearInterval(state.timer.id);state.timer.id=null;}
+  $("#timerStart").textContent="▶ Nastavi";
+}
+function toggleTimer(){ state.timer.id?stopTimer():startTimer(); }
+function resetTimer(){
+  stopTimer();state.timer.left=state.timer.duration;paintTimer();
+  $("#timerStart").textContent="▶ Pokreni "+state.timer.duration+" s";
+}
+
+/* ---------- SCORING ---------- */
+function score(pts){
+  if(state.activeAvatar===null)return;
+  const idx=state.activeAvatar;
+  state.teams[state.current].score+=pts;
+  state.done[idx]=true;
+  closeModal();
+  // next team
+  state.current=(state.current+1)%state.teams.length;
+  renderBoard();
+  if(state.done.every(Boolean)) setTimeout(endGame,400);
+}
+
+/* ---------- END ---------- */
+function endGame(){
+  const ranked=[...state.teams].sort((a,b)=>b.score-a.score);
+  const top=ranked[0];
+  const tie=ranked.filter(t=>t.score===top.score);
+  $("#winnerName").textContent= tie.length>1 ? "Nerešeno!" : top.name;
+  $("#winnerSub").textContent= tie.length>1
+    ? "Više timova deli prvo mesto sa "+top.score+" poena"
+    : "Pobednik sa "+top.score+" poena 🎉";
+  const list=$("#finalList");list.innerHTML="";
+  ranked.forEach((t,i)=>{
+    const row=document.createElement("div");
+    row.className="final-row"+(t.score===top.score?" first":"");
+    const medal=["🥇","🥈","🥉"][i]||(i+1+".");
+    row.innerHTML=`<div class="rank">${medal}</div>
+      <div class="lb-dot" style="background:${t.color}">${t.idx}</div>
+      <div class="nm">${escapeHtml(t.name)}</div>
+      <div class="pts">${t.score}</div>`;
+    list.appendChild(row);
+  });
+  show("screen-end");
+}
+
+/* ---------- EVENTS ---------- */
+$("#timerStart").addEventListener("click",toggleTimer);
+$("#timerReset").addEventListener("click",resetTimer);
+$("#helpToggle").addEventListener("click",()=>{
+  const box=$("#helpBox");box.classList.toggle("show");
+  $("#helpChevron").textContent=box.classList.contains("show")?"▲":"▼";
+});
+$$(".score-btn").forEach(b=>b.addEventListener("click",()=>score(+b.dataset.pts)));
+$("#overlay").addEventListener("click",e=>{ if(e.target===$("#overlay")) closeModal(); });
+$("#endEarlyBtn").addEventListener("click",()=>{ if(confirm("Završiti igru i prikazati rezultate?")) endGame(); });
+$("#newGameBtn").addEventListener("click",()=>{ resetTimer(); show("screen-setup"); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#overlay").classList.contains("active")) closeModal(); });
+
+/* ---------- INIT ---------- */
+initSetup();
+</script>
+</body>
+</html>
