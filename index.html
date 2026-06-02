@@ -98,7 +98,7 @@
   .avatar.done .face{opacity:.4;}
   .avatar .badge{position:absolute;bottom:8px;right:10px;background:var(--accent);color:#04201d;font-weight:800;font-size:13px;padding:2px 9px;border-radius:9px;}
 
-  .board-foot{text-align:center;margin-top:26px;}
+  .board-foot{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-top:26px;}
 
   /* ---------- MODAL ---------- */
   .overlay{
@@ -241,6 +241,7 @@
   <div class="grid" id="avatarGrid"></div>
 
   <div class="board-foot">
+    <button class="btn-ghost" id="soundToggle" title="Uključi/isključi zvuk">🔊 Zvuk: uključen</button>
     <button class="btn-ghost" id="endEarlyBtn">Završi igru i prikaži rezultate</button>
   </div>
 </section>
@@ -398,6 +399,48 @@ let state = {
   timer:{id:null,left:60,duration:60}
 };
 
+/* ============================================================
+   ZVUČNI EFEKTI (Web Audio API — bez eksternih fajlova)
+   ============================================================ */
+const Sound = (function(){
+  let ctx=null, enabled=true;
+  function ac(){
+    if(!ctx){ const AC=window.AudioContext||window.webkitAudioContext; if(AC) ctx=new AC(); }
+    return ctx;
+  }
+  // jedan ton: frekvencija (Hz), trajanje (s), oblik, jačina, odlaganje (s)
+  function tone(freq,dur,type,vol,when){
+    if(!enabled)return;
+    const c=ac(); if(!c)return;
+    const t=c.currentTime+(when||0);
+    const osc=c.createOscillator(), g=c.createGain();
+    osc.type=type||"sine"; osc.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.2,t+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    osc.connect(g).connect(c.destination);
+    osc.start(t); osc.stop(t+dur+0.03);
+  }
+  function seq(notes,type,vol,gap){ // niz [freq,dur] sa razmakom
+    let when=0;
+    notes.forEach(n=>{ tone(n[0],n[1],type,vol,when); when+=gap||n[1]; });
+  }
+  return {
+    resume(){ const c=ac(); if(c&&c.state==="suspended") c.resume(); },
+    setEnabled(v){ enabled=v; if(v) this.resume(); },
+    isEnabled(){ return enabled; },
+    select(){ tone(720,0.07,"sine",0.12); },               // izbor avatara
+    start(){ tone(587,0.10,"sine",0.18); tone(880,0.12,"sine",0.16,0.10); }, // pokretanje tajmera
+    tick(){ tone(880,0.06,"square",0.10); },               // žuta zona (otkucaj)
+    tickCrit(){ tone(1320,0.09,"square",0.20); },          // crvena zona (hitan otkucaj)
+    timeUp(){ seq([[196,0.28],[155,0.45]],"sawtooth",0.22,0.22); }, // isteklo vreme (zujalica)
+    score0(){ seq([[330,0.16],[247,0.30]],"sawtooth",0.18,0.15); }, // 0 poena
+    score1(){ tone(523,0.16,"sine",0.20); },               // 1 poen (ding)
+    score2(){ seq([[523,0.14],[659,0.14],[784,0.14],[1047,0.22]],"triangle",0.20,0.10); }, // 2 poena
+    end(){ seq([[523,0.22],[659,0.22],[784,0.22],[1047,0.30],[1319,0.45]],"triangle",0.22,0.18); } // kraj
+  };
+})();
+
 /* ---------- HELPERS ---------- */
 const $ = sel => document.querySelector(sel);
 const $$ = sel => document.querySelectorAll(sel);
@@ -486,6 +529,7 @@ function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;","
 function openScenario(avatarIndex){
   if(state.done[avatarIndex])return;
   state.activeAvatar=avatarIndex;
+  Sound.resume(); Sound.select();
   const sc=SCENARIOS[state.order[avatarIndex]];
   const team=state.teams[state.current];
 
@@ -520,11 +564,21 @@ function paintTimer(){
 }
 function startTimer(){
   if(state.timer.id)return;
+  Sound.resume(); Sound.start();
   $("#timerStart").textContent="⏸ Pauza";
+  const crit=Math.max(5,Math.round(state.timer.duration*0.17));
+  const warn=Math.max(10,Math.round(state.timer.duration*0.34));
   state.timer.id=setInterval(()=>{
     state.timer.left--;
     paintTimer();
-    if(state.timer.left<=0){stopTimer();}
+    if(state.timer.left<=0){
+      stopTimer();
+      Sound.timeUp();
+    } else if(state.timer.left<=crit){
+      Sound.tickCrit();
+    } else if(state.timer.left<=warn){
+      Sound.tick();
+    }
   },1000);
 }
 function stopTimer(){
@@ -543,6 +597,7 @@ function score(pts){
   const idx=state.activeAvatar;
   state.teams[state.current].score+=pts;
   state.done[idx]=true;
+  [Sound.score0,Sound.score1,Sound.score2][pts]();
   closeModal();
   // next team
   state.current=(state.current+1)%state.teams.length;
@@ -552,6 +607,7 @@ function score(pts){
 
 /* ---------- END ---------- */
 function endGame(){
+  Sound.resume(); Sound.end();
   const ranked=[...state.teams].sort((a,b)=>b.score-a.score);
   const top=ranked[0];
   const tie=ranked.filter(t=>t.score===top.score);
@@ -582,6 +638,12 @@ $("#helpToggle").addEventListener("click",()=>{
 });
 $$(".score-btn").forEach(b=>b.addEventListener("click",()=>score(+b.dataset.pts)));
 $("#overlay").addEventListener("click",e=>{ if(e.target===$("#overlay")) closeModal(); });
+$("#soundToggle").addEventListener("click",()=>{
+  const on=!Sound.isEnabled();
+  Sound.setEnabled(on);
+  $("#soundToggle").textContent=on?"🔊 Zvuk: uključen":"🔇 Zvuk: isključen";
+  if(on) Sound.select(); // kratka potvrda
+});
 $("#endEarlyBtn").addEventListener("click",()=>{ if(confirm("Završiti igru i prikazati rezultate?")) endGame(); });
 $("#newGameBtn").addEventListener("click",()=>{ resetTimer(); show("screen-setup"); });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#overlay").classList.contains("active")) closeModal(); });
