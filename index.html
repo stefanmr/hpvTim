@@ -214,6 +214,13 @@
         <label for="timerDuration">Vreme za odgovor tima</label>
         <select id="timerDuration"></select>
       </div>
+      <div class="field">
+        <label for="autoStart">Pokretanje tajmera</label>
+        <select id="autoStart">
+          <option value="1">Automatski — kreće po izboru avatara</option>
+          <option value="0">Ručno — facilitator pokreće dugmetom</option>
+        </select>
+      </div>
       <div class="setup-actions">
         <button class="btn-primary" id="startBtn">Započni igru ▶</button>
       </div>
@@ -403,6 +410,7 @@ let state = {
   order:[],          // shuffled scenario index per avatar
   done:[],           // bool per avatar
   activeAvatar:null,
+  autoStart:true,
   timer:{id:null,left:60,duration:60}
 };
 
@@ -469,6 +477,8 @@ function initSetup(){
     const o=document.createElement("option");o.value=s;o.textContent=s+" sekundi";td.appendChild(o);
   });
   td.value=90;
+
+  $("#autoStart").value="1";
   $("#startBtn").addEventListener("click",startGame);
 }
 function renderTeamInputs(n){
@@ -495,6 +505,7 @@ function startGame(){
   }));
   state.current=0;
   state.timer.duration=+$("#timerDuration").value||60;
+  state.autoStart=$("#autoStart").value==="1";
   state.order=shuffle([...Array(SCENARIOS.length).keys()]); // randomize mapping
   state.done=new Array(SCENARIOS.length).fill(false);
   renderBoard();
@@ -553,7 +564,7 @@ function openScenario(avatarIndex){
   $("#helpChevron").textContent="▼";
   resetTimer();
   $("#overlay").classList.add("active");
-  startTimer(); // tajmer kreće odmah po kliku na avatar
+  if(state.autoStart) startTimer(); // auto-pokretanje samo ako je tako podešeno
 }
 function closeModal(){
   stopTimer();

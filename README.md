@@ -12,7 +12,7 @@ Aplikacija je jedan samostalan HTML fajl (HTML + CSS + JavaScript, bez zavisnost
 
 ## Tok igre
 
-1. **Podešavanje** — broj timova (2–10), imena timova i vreme za odgovor (30–120 s, podrazumevano 90 s).
+1. **Podešavanje** — broj timova (2–10), imena timova, vreme za odgovor (30–120 s, podrazumevano 90 s) i pokretanje tajmera (automatski po izboru avatara — podrazumevano — ili ručno, dugmetom facilitatora).
 2. **Tabla** — leaderboard sa trenutnim rezultatom i indikatorom „na potezu”, mreža od 20 avatara.
 3. **Potez** — facilitator otvara izjavu roditelja klikom na avatar; tim formuliše odgovor uživo dok teče tajmer.
 4. **Bodovanje** — facilitator dodeljuje **0 / 1 / 2** poena prema kvalitetu odgovora.
