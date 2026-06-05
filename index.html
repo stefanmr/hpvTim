@@ -90,7 +90,7 @@
     border:1px solid rgba(255,255,255,.1);display:grid;place-items:center;position:relative;
     box-shadow:var(--shadow);overflow:hidden;
   }
-  .avatar .face{font-size:clamp(30px,5vw,46px);line-height:1;}
+  .avatar .face{font-size:clamp(42px,6vw,70px);line-height:1;}
   .avatar .num{position:absolute;top:8px;left:11px;font-size:13px;color:var(--muted);font-weight:700;}
   .avatar:not(.done):hover{transform:translateY(-4px);box-shadow:0 16px 36px rgba(0,0,0,.5);border-color:var(--accent);}
   .avatar.done{cursor:default;opacity:.32;filter:grayscale(.7);}
@@ -217,11 +217,6 @@
       <div class="setup-actions">
         <button class="btn-primary" id="startBtn">Započni igru ▶</button>
       </div>
-      <p class="hint">
-        Igra se prikazuje na velikom ekranu. Facilitator proziva tim na potezu, tim bira avatar,
-        a facilitator otvara izjavu roditelja klikom. Tim formuliše odgovor uživo (u okviru podešenog vremena),
-        nakon čega facilitator dodeljuje 0, 1 ili 2 poena.
-      </p>
     </div>
   </div>
 </section>
@@ -313,7 +308,7 @@
 
 <script>
 /* ============================================================
-   BAZA SCENARIJA (17 izjava roditelja + pomoć za facilitatora)
+   BAZA SCENARIJA (20 izjava roditelja + pomoć za facilitatora)
    ============================================================ */
 const SCENARIOS = [
   {t:"Tajming i odlaganje",
@@ -348,10 +343,10 @@ const SCENARIOS = [
    q:"Neki ginekolozi kažu da se kondilomi, pa čak i teže promene poput CIN 2 i 3, lako uklanjaju intervencijom. Ako to može tako rutinski da se reši i skine, da li je zaista neophodno da prima vakcinu?",
    hbm:"Percepcija ozbiljnosti — hirurgija je „laka”, pa bolest nije ozbiljna.",
    jv:"Distorted risk perception (Iskrivljena percepcija rizika) — drastično potcenjivanje stresa, bola i rizika operativnih zahvata na grliću materice."},
-  {t:"Strah od neželjenih efekata",
-   q:"Iskreno, jako se plašim neželjenih reakcija i njene dugoročne bezbednosti. Koliko je ova vakcina uopšte dugo na tržištu i ko je proizvodi? Nemam dovoljno informacija o tome kakva su iskustva u drugim zemljama da bih bila mirna.",
-   hbm:"Percepcija prepreka — strah od nepoznatog i nuspojava deluje kao ogromna barijera za prihvatanje.",
-   jv:"Fear and phobias (Strahovi i fobije) — anksioznost usled nedostatka informacija o sigurnosnom profilu."},
+  {t:"Nova vakcina i nepoverenje posle COVID-a",
+   q:"Iskreno, jako se plašim neželjenih reakcija. Ova vakcina je nova i po meni nedovoljno ispitana, a posle svega što smo prošli sa COVID vakcinama ja prosto više ne verujem nijednoj novoj vakcini. Zašto bih baš ovu sada primila bez ikakve zadrške?",
+   hbm:"Percepcija prepreka — generalizovano nepoverenje prema „novim” vakcinama deluje kao snažna barijera za prihvatanje.",
+   jv:"Fear and phobias / Epistemic relativism — strah pojačan post-COVID nepoverenjem i pogrešnom predstavom da je HPV vakcina nova i neispitana (zapravo je u širokoj upotrebi od 2006. godine)."},
   {t:"Stigma — „neće se desiti mom detetu”",
    q:"Ja vrlo dobro poznajem i vaspitavam svoje dete. Sigurna sam da ona neće doći u situaciju da dobije seksualno prenosivu bolest. Mislim da vakcina za ovu vrstu bolesti nama jednostavno nije potrebna.",
    hbm:"Percepcija osetljivosti — potpuno negiranje rizika jer se dete doživljava kao „sigurno”.",
@@ -364,10 +359,10 @@ const SCENARIOS = [
    q:"Zabrinuta sam šta se sve tačno nalazi u toj vakcini. Stalno čitamo o raznim dodacima i aluminijumu u vakcinama. Da li je zaista bezbedno da se takav sastav ubrizgava mom detetu koje je još uvek u razvoju?",
    hbm:"Percepcija prepreka — briga o unosu nepoznatih ili „toksičnih” supstanci.",
    jv:"Fear and phobias — strah od hemije/toksina („Toxophobia”)."},
-  {t:"Nepoverenje u statistiku",
-   q:"Iskreno, apsolutno mi zvuči netačno da smo mi baš u vrhu po statistici za rak grlića materice. Pričala sam sa nekim ljudima, pa i lekarima, koji kažu da se to preuveličava i da oni veruju samo u svoje lično iskustvo. Zašto bih ja sada slepo verovala tim brojkama?",
-   hbm:"Percepcija ozbiljnosti — negiranje nacionalnog zdravstvenog problema na nivou cele populacije.",
-   jv:"Epistemic relativism (Epistemički relativizam) — selektivno odbacivanje zvaničnih statističkih podataka u korist pristrasnog ličnog iskustva."},
+  {t:"Zamena genotipova (replacement)",
+   q:"Čuo sam da su druge zemlje, gde je uvedena ova vakcina, dobile dominaciju nekih drugih genotipova HPV-a baš zbog te vakcinacije. Zar onda ne rešavamo jedan problem tako što stvaramo novi? Čemu vakcina ako će je samo zameniti neki drugi, možda i opasniji tip virusa?",
+   hbm:"Percepcija koristi — sumnja da vakcina uopšte donosi korist ako „samo prebacuje” problem na druge tipove virusa.",
+   jv:"Unwarranted beliefs (Neosnovana uverenja) — mit o „zameni tipova” (type replacement), bez dokaza da vakcinacija dovodi do porasta onkogenih nevakcinalnih genotipova."},
   {t:"Nedovoljna svest o drugim kancerima",
    q:"Shvatam da ova vakcina štiti od raka grlića materice, ali stalno potencirate da treba i dečaci da je prime. Koji to tačno rak dečaci uopšte mogu da dobiju od HPV-a? Nikad nisam čula da muškarci imaju ozbiljne posledice, osim eventualno nekih bradavica.",
    hbm:"Percepcija ozbiljnosti i osetljivosti — verovanje da muški pol ne snosi teške posledice.",
@@ -383,11 +378,23 @@ const SCENARIOS = [
   {t:"Normalizacija virusa",
    q:"Čitala sam da preko 80% ljudi ionako pre ili kasnije dođe u kontakt sa ovim virusom i da većina nosi HPV. Ako je to toliko uobičajeno i normalno, zašto pravimo toliku paniku i moramo decu da vakcinišemo? Zar se ne stiče neki prirodni imunitet?",
    hbm:"Percepcija ozbiljnosti — smatranje da „sveprisutnost” virusa znači da je bezopasan.",
-   jv:"Distorted risk perception (Iskrivljena percepcija rizika) i privlačnost ideje o prirodnom imunitetu „krda”."}
+   jv:"Distorted risk perception (Iskrivljena percepcija rizika) i privlačnost ideje o prirodnom imunitetu „krda”."},
+  {t:"Fertilitet dečaka",
+   q:"A šta je sa mojim sinom — može li mu ova vakcina naškoditi i izazvati probleme sa plodnošću kasnije? Stalno se priča da takve vakcine utiču na fertilitet, pa me brine da li bih ga vakcinacijom lišila mogućnosti da jednog dana postane otac.",
+   hbm:"Percepcija prepreka — strah od ugrožavanja buduće plodnosti sina stvara snažan otpor.",
+   jv:"Fear and phobias / Unwarranted beliefs — dezinformacije o uticaju vakcine na mušku plodnost, bez ikakve naučne osnove."},
+  {t:"Nema podataka o srpskoj deci",
+   q:"Sve to lepo zvuči, ali gde su podaci baš o našoj, srpskoj deci? Da li je iko sproveo kliničku studiju o efikasnosti ove vakcine kod dece u Srbiji? Dok mi ne pokažete naše, domaće rezultate, teško da mogu da budem ubeđena da to važi i za moje dete.",
+   hbm:"Percepcija koristi — sumnja da rezultati dobijeni u drugim populacijama važe i za našu decu.",
+   jv:"Epistemic relativism (Epistemički relativizam) — odbacivanje obimnih međunarodnih dokaza uz zahtev za „lokalnim” podacima, nerazumevanje univerzalnosti imunološkog odgovora."},
+  {t:"Proizvođač i poreklo vakcine",
+   q:"A gde se uopšte ta vakcina proizvodi i koja je firma iza nje? Zna se da te kompanije zarađuju ogromne pare na tome. I zašto, ako je tako važna, ne postoji nijedna naša, srpska vakcina protiv HPV-a koju bismo dali deci?",
+   hbm:"Percepcija prepreka — nepoverenje u strane proizvođače i njihove motive deluje kao barijera.",
+   jv:"Moral concerns / Epistemic relativism — sumnja u profitne motive farmaceutskih kompanija i poistovećivanje porekla proizvoda sa (ne)bezbednošću."}
 ];
 
-const FACES = ["😀","😟","🤔","😠","😕","😬","🙂","😧","😨","😐","😲","😮","🧐","😤","😦","🤨","😯"];
-const TEAM_COLORS = ["#14b8a6","#f59e0b","#8b5cf6","#ec4899","#3b82f6"];
+const FACES = ["😀","😟","🤔","😠","😕","😬","🙂","😧","😨","😐","😲","😮","🧐","😤","😦","🤨","😯","😰","🙄","😶"];
+const TEAM_COLORS = ["#14b8a6","#f59e0b","#8b5cf6","#ec4899","#3b82f6","#ef4444","#22c55e","#06b6d4","#f97316","#84cc16"];
 
 /* ---------- STATE ---------- */
 let state = {
@@ -450,7 +457,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 /* ---------- SETUP ---------- */
 function initSetup(){
   const sel=$("#teamCount");
-  for(let n=2;n<=5;n++){
+  for(let n=2;n<=10;n++){
     const o=document.createElement("option");o.value=n;o.textContent=n;sel.appendChild(o);
   }
   sel.value=3;
@@ -461,7 +468,7 @@ function initSetup(){
   [30,45,60,90,120].forEach(s=>{
     const o=document.createElement("option");o.value=s;o.textContent=s+" sekundi";td.appendChild(o);
   });
-  td.value=60;
+  td.value=90;
   $("#startBtn").addEventListener("click",startGame);
 }
 function renderTeamInputs(n){
@@ -546,6 +553,7 @@ function openScenario(avatarIndex){
   $("#helpChevron").textContent="▼";
   resetTimer();
   $("#overlay").classList.add("active");
+  startTimer(); // tajmer kreće odmah po kliku na avatar
 }
 function closeModal(){
   stopTimer();
