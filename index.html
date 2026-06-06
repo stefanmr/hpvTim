@@ -152,6 +152,7 @@
   .score-btn.s1{background:linear-gradient(135deg,#854d0e,#eab308);}
   .score-btn.s2{background:linear-gradient(135deg,#14532d,#22c55e);}
   .score-btn:hover{box-shadow:0 10px 26px rgba(0,0,0,.5);transform:translateY(-3px);}
+  .cancel-turn{display:block;width:100%;margin-top:16px;text-align:center;}
 
   /* ---------- END ---------- */
   .end-wrap{max-width:640px;margin:0 auto;padding-top:6vh;text-align:center;}
@@ -342,6 +343,7 @@
             <span class="desc">Empatija + jasna, kratka i tačna informacija</span>
           </button>
         </div>
+        <button class="btn-ghost cancel-turn" id="cancelTurn">✕ Zatvori bez bodovanja — isti tim bira ponovo</button>
       </div>
     </div>
   </div>
@@ -710,6 +712,7 @@ $("#helpToggle").addEventListener("click",()=>{
   $("#helpChevron").textContent=box.classList.contains("show")?"▲":"▼";
 });
 $$(".score-btn").forEach(b=>b.addEventListener("click",()=>score(+b.dataset.pts)));
+$("#cancelTurn").addEventListener("click",closeModal); // zatvori bez poena; isti tim, pitanje ostaje
 $("#overlay").addEventListener("click",e=>{ if(e.target===$("#overlay")) closeModal(); });
 $("#soundToggle").addEventListener("click",()=>{
   const on=!Sound.isEnabled();
