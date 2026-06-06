@@ -15,7 +15,7 @@ Aplikacija je jedan samostalan HTML fajl (HTML + CSS + JavaScript, bez zavisnost
 1. **Podešavanje** — broj timova (2–10), imena timova, vreme za odgovor (30–120 s, podrazumevano 90 s) i pokretanje tajmera (automatski po izboru avatara — podrazumevano — ili ručno, dugmetom facilitatora).
 2. **Tabla** — leaderboard sa trenutnim rezultatom i indikatorom „na potezu”, mreža od 20 avatara.
 3. **Potez** — facilitator otvara izjavu roditelja klikom na avatar; tim formuliše odgovor uživo dok teče tajmer.
-4. **Bodovanje** — facilitator dodeljuje **0 / 1 / 2** poena prema kvalitetu odgovora.
+4. **Bodovanje** — facilitator dodeljuje **0 / 1 / 2** poena prema kvalitetu odgovora. Umesto bodovanja, dugmetom **„Zatvori bez bodovanja”** izjava se može zatvoriti bez poena — pitanje ostaje dostupno, a isti tim ostaje na potezu i bira ponovo (isto i tasterom `Esc` ili klikom van prozora).
 5. **Kraj** — kada se iskoriste svi avatari (ili ručno), prikazuje se finalna tabela sa pobednikom.
 
 Izjave su pri svakom startu nasumično raspoređene na avatare. Uz svaku izjavu postoji skrivena
