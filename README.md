@@ -1,6 +1,6 @@
 # hpvTim — Edukativna igra: Komunikacija o HPV vakcini
 
-Interaktivna igra za radionice sa lekarima, zasnovana na **JitsuVax / HBM** metodologiji.
+Interaktivna igra za radionice sa zdravstvenim radnicima, zasnovana na **JitsuVax / HBM** metodologiji.
 Cilj je vežbanje empatične i tačne komunikacije sa roditeljima koji imaju nedoumice oko HPV vakcine.
 
 ## Pokretanje
