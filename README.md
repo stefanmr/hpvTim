@@ -21,6 +21,9 @@ Aplikacija je jedan samostalan HTML fajl (HTML + CSS + JavaScript, bez zavisnost
 Izjave su pri svakom startu nasumično raspoređene na avatare. Uz svaku izjavu postoji skrivena
 **Pomoć za facilitatora** (HBM drajver i JitsuVax koren) koja se otkriva po potrebi.
 
+**Tema:** prekidačem u donjem desnom uglu (🌙 / ☀️) može se uključiti **svetla tema visokog
+kontrasta** — korisno za projektore i osvetljene prostorije. Izbor se pamti za sledeće otvaranje.
+
 ## Bodovanje
 
 | Poeni | Kriterijum |

@@ -188,6 +188,53 @@
     .grid{max-width:1500px;gap:22px;}
     .turn-banner b{font-size:26px;}
   }
+
+  /* ---------- SVETLA TEMA (visok kontrast) ---------- */
+  body.light{
+    --bg:#eef2f7;
+    --bg2:#e2e8f0;
+    --panel:#ffffff;
+    --panel2:#eef2f7;
+    --accent:#0d9488;
+    --accent2:#0284c7;
+    --gold:#b45309;
+    --text:#0f172a;
+    --muted:#475569;
+    --good:#15803d;
+    --mid:#a16207;
+    --bad:#dc2626;
+    --shadow:0 10px 30px rgba(15,23,42,.14);
+    background:radial-gradient(1200px 800px at 70% -10%,#dbeafe 0%,var(--bg) 55%);
+  }
+  body.light .btn-ghost{background:rgba(15,23,42,.05);border-color:rgba(15,23,42,.15);}
+  body.light .btn-ghost:hover{background:rgba(15,23,42,.09);}
+  body.light .help-toggle{background:rgba(15,23,42,.03);border-color:rgba(15,23,42,.25);}
+  body.light .help-toggle:hover{background:rgba(15,23,42,.07);}
+  body.light select,body.light input[type=text]{border-color:rgba(15,23,42,.2);}
+  body.light .card,body.light .lb-team,body.light .avatar,body.light .modal{border-color:rgba(15,23,42,.1);}
+  body.light .avatar{background:linear-gradient(145deg,#ffffff,#eef2f7);}
+
+  /* ---------- PREKIDAČ ZA TEMU ---------- */
+  .theme-switch{
+    position:fixed;bottom:16px;right:16px;z-index:60;
+    display:flex;align-items:center;gap:8px;
+    background:var(--panel);border:1px solid rgba(255,255,255,.14);
+    padding:7px 12px;border-radius:999px;box-shadow:var(--shadow);
+  }
+  .theme-switch:hover{box-shadow:0 12px 32px rgba(0,0,0,.4);}
+  .theme-switch .ts-icon{font-size:15px;line-height:1;}
+  .theme-switch .ts-track{
+    width:40px;height:22px;border-radius:999px;
+    background:var(--panel2);position:relative;transition:background .2s;
+    border:1px solid rgba(255,255,255,.14);
+  }
+  .theme-switch .ts-knob{
+    position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+    background:var(--accent);transition:transform .25s ease;box-shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  body.light .theme-switch{border-color:rgba(15,23,42,.15);}
+  body.light .theme-switch .ts-track{border-color:rgba(15,23,42,.18);}
+  body.light .theme-switch .ts-knob{transform:translateX(18px);}
 </style>
 </head>
 <body>
@@ -312,6 +359,13 @@
     </div>
   </div>
 </section>
+
+<!-- ============ PREKIDAČ ZA TEMU (svetla / tamna) ============ -->
+<button class="theme-switch" id="themeSwitch" title="Svetla / tamna tema" aria-label="Promeni temu">
+  <span class="ts-icon">🌙</span>
+  <span class="ts-track"><span class="ts-knob"></span></span>
+  <span class="ts-icon">☀️</span>
+</button>
 
 <script>
 /* ============================================================
@@ -666,6 +720,17 @@ $("#soundToggle").addEventListener("click",()=>{
 $("#endEarlyBtn").addEventListener("click",()=>{ if(confirm("Završiti igru i prikazati rezultate?")) endGame(); });
 $("#newGameBtn").addEventListener("click",()=>{ resetTimer(); show("screen-setup"); });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#overlay").classList.contains("active")) closeModal(); });
+
+/* ---------- TEMA (svetla / tamna) ---------- */
+function setTheme(light){
+  document.body.classList.toggle("light",light);
+  $("#themeSwitch").setAttribute("aria-checked",light?"true":"false");
+  try{ localStorage.setItem("hpvtim-theme",light?"light":"dark"); }catch(e){}
+}
+$("#themeSwitch").addEventListener("click",()=>setTheme(!document.body.classList.contains("light")));
+let savedTheme="dark";
+try{ savedTheme=localStorage.getItem("hpvtim-theme")||"dark"; }catch(e){}
+setTheme(savedTheme==="light");
 
 /* ---------- INIT ---------- */
 initSetup();
